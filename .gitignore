@@ -1,0 +1,9 @@
+/FoodTidings.Web/ErrorLogs/*
+obj
+bin
+*.user
+*.suo
+App_Data
+*.results.xml
+*.bak
+*.suo
