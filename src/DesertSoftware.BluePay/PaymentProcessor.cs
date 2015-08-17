@@ -51,26 +51,38 @@ namespace DesertSoftware.BluePay
                 paymentData.Add("TAMPER_PROOF_SEAL", Security.CreateTamperProofSeal(SecretKey, paymentData));
 
             // Post data to gateway
-            try {
-                using (WebClient client = new WebClient()) {
 
-                    client.Headers.Add("Content-Type", "application/x-www-form-urlencoded");
+            // Re-arranged logic to use an outer using statement with a try catch pattern internally. This 
+            // helps to avoid race conditions when the Response object in the WebException from an exception
+            // thrown from a try catch with an internal using statement is disposed and so mostly works in the
+            // webexception handler but sometimes just doesn't due to garbage collector activities.
+            
+            using (WebClient client = new WebClient()) {
+                client.Headers.Add("Content-Type", "application/x-www-form-urlencoded");
+
+                try {
                     result = Encoding.ASCII.GetString(client.UploadValues(GatewayUrl, "POST", paymentData));
-                }
-            } catch (WebException wx) {
+                } catch (WebException wx) {
 
-                // Bad transactions are reported as http 400 Bad Request exceptions
-                // The actual details are contained in the response stream
-                using (System.IO.StreamReader reader = new System.IO.StreamReader(wx.Response.GetResponseStream())) {
-                    result = reader.ReadToEnd();
-                    reader.Close();
-                }
-            } catch (Exception ex) {
+                    // Bad transactions are reported as http 400 Bad Request exceptions
+                    // The actual details are contained in the response stream
 
-                // Something unexpected happened. Capture the message
-                result = string.Format("STATUS=E&MESSAGE={0}", ex.Message);
+                    result = string.Format("STATUS=E&MESSAGE={0}", wx.Message);
+
+                    if (wx.Response != null)
+                        using (var response = (WebResponse)wx.Response) {
+                            using (System.IO.StreamReader reader = new System.IO.StreamReader(response.GetResponseStream())) {
+                                result = reader.ReadToEnd();
+                                reader.Close();
+                            }
+                        }
+                } catch (Exception ex) {
+
+                    // Something unexpected happened. Capture the message
+                    result = string.Format("STATUS=E&MESSAGE={0}", ex.Message);
+                }
             }
-
+            
             resultData.Add("RAW_RESULT", result);
 
             // parse the result into a name value collection

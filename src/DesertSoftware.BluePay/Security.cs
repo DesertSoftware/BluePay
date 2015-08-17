@@ -34,6 +34,8 @@ namespace DesertSoftware.BluePay
         /// <param name="data">The data.</param>
         /// <returns></returns>
         static internal string CreateTamperProofSeal(string secretKey, NameValueCollection data) {
+            if (data == null) throw new ArgumentNullException("data");
+
             if (data["TPS_DEF"] != null)
                 return CreateTamperProofSeal(secretKey, data, data["TPS_DEF"]);
 
@@ -48,6 +50,10 @@ namespace DesertSoftware.BluePay
         /// <param name="fields">The data fields.</param>
         /// <returns></returns>
         static internal string CreateTamperProofSeal(string secretKey, NameValueCollection data, params string[] fields) {
+            if (secretKey == null) throw new ArgumentNullException("secretKey");
+            if (data == null) throw new ArgumentNullException("data");
+            if (fields == null) throw new ArgumentNullException("fields");
+
             StringBuilder seal = new StringBuilder();
 
             // Computes an MD5 hash of the specified data field values
@@ -80,7 +86,7 @@ namespace DesertSoftware.BluePay
         /// <param name="tpsDefinition">The TPS definition (a space delimited list of data fields).</param>
         /// <returns></returns>
         static internal string CreateTamperProofSeal(string secretKey, NameValueCollection data, string tpsDefinition) {
-            return CreateTamperProofSeal(secretKey, data, tpsDefinition.Split(' '));
+            return CreateTamperProofSeal(secretKey, data, (tpsDefinition ?? "").Split(' '));
         }
 
         /// <summary>
