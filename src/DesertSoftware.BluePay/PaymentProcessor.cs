@@ -40,6 +40,9 @@ namespace DesertSoftware.BluePay
             AccountId = accountId;
             SecretKey = secretKey;
             GatewayUrl = gatewayUrl;
+
+            // ensure we are communicating via TLS 1.2 minimum
+            System.Net.ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
         }
 
         public NameValueCollection ProcessPayment(NameValueCollection paymentData) {
